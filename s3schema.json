@@ -1,0 +1,30 @@
+{
+  "type": "object",
+  "properties": {
+    "Records": {
+      "items": {
+        "required": [
+          "s3"
+        ],
+        "type": "object",
+        "properties": {
+          "s3": {
+            "type": "object",
+            "properties": {
+              "object": {
+                "type": "object",
+                "required": ["key", "eTag"]
+              },
+              "bucket": {
+                "type": "object",
+                "required": ["name"]
+              }
+            },
+            "required": ["object", "bucket"]
+          }
+        }
+      },
+      "type": "array"
+    }
+  }
+}

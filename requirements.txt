@@ -1,0 +1,4 @@
+boto3
+jsonschema
+git+https://bf90dc0b06cc79c67f7c62475e4009e46bc438e9:x-oauth-basic@github.com/ecmonsen/regender.git#egg=regender
+

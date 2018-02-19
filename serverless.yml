@@ -1,0 +1,67 @@
+service: regender
+
+provider:
+  name: aws
+  runtime: python2.7
+  iamRoleStatements: # permissions for all of your functions can be set here
+    - Effect: Allow
+      Action:
+        - lambda:InvokeAsync
+        - lambda:InvokeFunction
+      Resource: "arn:aws:lambda:us-east-1:*:*"
+
+# A plugin is required to package up Python requirements for Lambda. Run this command:
+# sls plugin install -n serverless-python-requirements
+plugins:
+  - serverless-python-requirements
+custom:
+  pythonRequirements:
+    dockerizePip: true
+
+# Which files to include/exclude in the lambda python package
+package:
+  include:
+    - handler.py
+    - s3schema.json
+  exclude:
+    - venv/**
+    - .git/**
+    - .idea/**
+    - package*.json
+    - __pycache__/**
+    - docker/**
+
+functions:
+  # Starts a regender request by writing the input to an S3 bucket. (The write will
+  # trigger the regender_go function to do the actual work)
+  regender_start:
+    timeout: 25 # seconds
+    handler: handler.regender_start
+    environment:
+      # not sure how to definitively get the actual stage - 'dev' is just a guess based on serverless create defaults
+      inputBucket: ${self:service}-${opt:stage, 'dev'}-input
+    events:
+      - http:
+          path: regender
+          method: post
+
+
+  # "Inner" function that has a longer timeout.
+  # Writes regendered output to S3.
+  regender_go:
+    timeout: 300 # seconds
+    handler: handler.regender_go
+    events:
+      - s3: ${self:service}-${opt:stage, 'dev'}-input
+    environment:
+      outputBucket: ${self:service}-${opt:stage, 'dev'}-output
+
+
+resources:
+  Resources:
+    # S3 bucket where regendered files will be placed
+    outputBucket:
+      Type: "AWS::S3::Bucket"
+      Properties:
+        AccessControl: "BucketOwnerFullControl"
+        BucketName: ${self:service}-${opt:stage, 'dev'}-output
